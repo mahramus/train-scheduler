@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Train Scheduler</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+        crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
+        crossorigin="anonymous"></script>
+
+    <!-- Firebase Reference -->
+    <script src="https://www.gstatic.com/firebasejs/4.11.0/firebase.js"></script>
+
+    <!-- Moment.js Reference -->
+    <!-- <script src="http://momentjs.com/downloads/moment.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
+</head>
+
+<body>
+
+    <!-- train
+         Tracker -->
+    <div class="container">
+
+        <!-- Jumbotron -->
+        <div class="jumbotron" style="background-color: black; color: white">
+            <h1 class="text-center">Come On Ride the Train</h1>
+            <h3 class="text-center">...and ride it.</h3>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+
+                <!-- Current train
+                    s-->
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <strong>Current Train Schedule</strong>
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table table-hover" id="trainTable">
+                            <thead>
+                                <tr>
+                                    <th>Train Name</th>
+                                    <th>Destination</th>
+                                    <th>Frequency (min)</th>
+                                    <th>Next Arrival</th>
+                                    <th>Minutes Away</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Add Train  -->
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <strong>Add Train</strong>
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+
+
+                        <!-- Entry Form -->
+                        <form>
+                            <div class="form-group">
+                                <label for="">Train Name</label>
+                                <input type="text" class="form-control" id="trainNameInput">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="">Destination</label>
+                                <input type="text" class="form-control" id="destinationInput">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="">First Train Time (HH:mm - military time)</label>
+                                <input type="text" class="form-control" id="startInput">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="">Frequency (min)</label>
+                                <input type="text" class="form-control" id="freqInput">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" id="addTrainBtn">Submit</button>
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Javascript -->
+    <!-- <script src="timesheet-logic.js"></script> -->
+
+    <script>
+        // Steps to complete:
+        /*
+        1. Initialize Firebase
+        2. Create button for adding new train
+        s - then update the html + update the database
+        3. Create a way to retrieve train
+        s from the train
+         database.
+        4. Create a way to calculate the months worked. Using difference between start and current time. Then use moment.js formatting to set difference in months.
+        5. Calculate Total billed
+        
+        */
+        // 1. Initialize Firebase
+
+        var config = {
+            apiKey: "AIzaSyDzK5ZxpUY3sIaxSuXlMULe3vx1hhxYqHQ",
+            authDomain: "train-scheduler-85ea8.firebaseapp.com",
+            databaseURL: "https://train-scheduler-85ea8.firebaseio.com",
+            projectId: "train-scheduler-85ea8",
+            storageBucket: "",
+            messagingSenderId: "308184416345"
+        };
+        firebase.initializeApp(config);
+
+
+        var database = firebase.database();
+
+
+        // 2. Button for adding Trains
+        $("#addTrainBtn").on("click", function () {
+
+            // Grabs user input
+            var trainName = $("#trainNameInput").val().trim();
+            var trainDest = $("#destinationInput").val().trim();
+            var trainTimeInput = moment($("#trainTimeInput").val().trim(), "HH:mm").subtract(10, "years").format("X");;
+            var freqRate = $("#freqInput").val().trim();
+
+            // Creates local "temporary" object for holding train data
+            var newTrain = {
+                name: trainName,
+                dest: trainDest,
+                start: trainStart,
+                rate: freqRate
+            }
+
+            // Uploads train data to the database
+            database.ref().push(newTrain);
+
+            // Logs everything to console
+            console.log(newTrain.name);
+            console.log(newTrain.dest);
+            console.log(newTrain.start);
+            console.log(newTrain.rate)
+
+            // Alert
+            alert("Train successfully added");
+
+            // Clears all of the text-boxes
+            $("#trainNameInput").val("");
+            $("#destinationInput").val("");
+            $("#startInput").val("");
+            $("#Input").val("");
+
+            // Prevents moving to new page
+            return false;
+        });
+
+
+        // 3. Create Firebase event for adding train to the database and a row in the html when a user adds an entry
+        database.ref().on("child_added", function (childSnapshot, prevChildKey) {
+
+            console.log(childSnapshot.val());
+
+            // Store everything into a variable.
+            var existTrainName = childSnapshot.val().name;
+            var existTrainDest = childSnapshot.val().dest;
+            var existTrainStart = childSnapshot.val().start;
+            var existFreqRate = childSnapshot.val().rate;
+
+            var diffTime = moment().diff(moment.unix(existTrainStart), "minutes");
+            var timeRemainder = moment().diff(moment.unix(existTrainStart), "minutes") % existFreqRate;
+            var minutes = existFreqRate - timeRemainder;
+
+            var nextArrival = moment().add(minutes, "m").format("HH:mm A");
+
+
+            console.log(minutes);
+            console.log(nextArrival);
+            console.log(moment().format("HH:mm A"));
+            console.log(nextArrival);
+            console.log(moment().format("X"));
+
+            // Add each train's data into the table
+            $("#trainTable > tbody").append("<tr><td>" + existTrainName + "</td><td>" + existTrainDest + "</td><td>" + existFreqRate + "</td><td>" + timeRemainder);
+
+        });
+
+
+
+    </script>
+
+</body>
+
+</html>
